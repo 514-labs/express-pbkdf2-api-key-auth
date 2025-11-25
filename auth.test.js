@@ -61,3 +61,22 @@ describe('validateAuthToken edge cases', () => {
     assert.strictEqual(validateAuthToken('1234.', 'a'.repeat(64)), false);
   });
 });
+
+describe('createAuthMiddleware', () => {
+  it('calls next() for valid Authorization header', async () => {
+    const { createAuthMiddleware } = require('./auth');
+    const { token, expectedHash } = generateTestToken();
+    
+    const getExpectedHash = () => expectedHash;
+    const middleware = createAuthMiddleware(getExpectedHash);
+    
+    const req = { headers: { authorization: `Bearer ${token}` } };
+    const res = {};
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
+    
+    middleware(req, res, next);
+    
+    assert.strictEqual(nextCalled, true);
+  });
+});
