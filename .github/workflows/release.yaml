@@ -1,0 +1,83 @@
+name: Release to NPM
+
+on:
+  push:
+    branches:
+      - main # Only run on main branch
+    paths:
+      - ".github/workflows/release.yaml"
+      - "src/**"
+      - "tests/**"
+      - "package.json"
+      - "package-lock.json"
+      - "tsconfig.json"
+      - "tsup.config.ts"
+      - "biome.json"
+
+  workflow_dispatch:
+    inputs:
+      dry-run:
+        type: boolean
+        description: "Run the release in dry-run mode"
+        required: true
+        default: true
+
+jobs:
+  version:
+    concurrency: release
+    if: ${{ ! contains(github.event.head_commit.message , '[no-release]') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: "write"
+      id-token: "write"
+    outputs:
+      version: ${{ steps.version.outputs.VERSION }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Get Version
+        id: version
+        run: |
+          # Use current package.json version
+          VERSION=$(node -p "require('./package.json').version")
+          echo "VERSION=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Release Version: ${VERSION}"
+
+      - name: Create Release/Tag
+        uses: ncipollo/release-action@v1
+        if: ${{ !inputs.dry-run }}
+        with:
+          tag: v${{ steps.version.outputs.VERSION }}
+          generateReleaseNotes: true
+          commit: ${{ github.sha }}
+          token: ${{ secrets.RELEASE_PAT }}
+
+  publish-npm:
+    name: Publish to NPM
+    runs-on: ubuntu-latest
+    if: ${{ !inputs.dry-run }}
+    needs:
+      - version
+    permissions:
+      contents: "read"
+      id-token: "write"
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Publish to NPM
+        shell: bash
+        run: ./scripts/release.sh ${{ needs.version.outputs.version }}
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
