@@ -1,8 +1,10 @@
 {
   "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist",
-    "declaration": true
+    "outDir": "dist/cjs",
+    "declaration": true,
+    "module": "CommonJS",
+    "moduleResolution": "Node"
   },
-  "include": ["src"]
+  "include": ["src/index.ts"]
 }
