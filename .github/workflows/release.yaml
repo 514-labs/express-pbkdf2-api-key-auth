@@ -3,7 +3,7 @@ name: Release to NPM
 on:
   push:
     branches:
-      - main  # Only run on main branch
+      - main # Only run on main branch
     paths:
       - ".github/workflows/release.yaml"
       - "src/**"
@@ -54,6 +54,7 @@ jobs:
           tag: v${{ steps.version.outputs.VERSION }}
           generateReleaseNotes: true
           commit: ${{ github.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   publish-npm:
     name: Publish to NPM
@@ -73,7 +74,7 @@ jobs:
         with:
           node-version: 20
           cache: npm
-          registry-url: 'https://registry.npmjs.org'
+          registry-url: "https://registry.npmjs.org"
 
       - name: Publish to NPM
         shell: bash
