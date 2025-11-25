@@ -1,6 +1,11 @@
 import crypto from "node:crypto";
 import type { NextFunction, Request, Response } from "express";
 
+const PBKDF2_ITERATIONS = 1000;
+const PBKDF2_KEY_LENGTH = 20;
+const PBKDF2_ALGORITHM = "sha256";
+const TOKEN_BYTE_LENGTH = 16;
+
 export function validateAuthToken(
   token: string,
   expectedHash: string,
@@ -18,7 +23,13 @@ export function validateAuthToken(
   }
 
   // Pass hex strings as ASCII bytes (matching moosestack behavior)
-  const derivedKey = crypto.pbkdf2Sync(tokenHex, saltHex, 1000, 20, "sha256");
+  const derivedKey = crypto.pbkdf2Sync(
+    tokenHex,
+    saltHex,
+    PBKDF2_ITERATIONS,
+    PBKDF2_KEY_LENGTH,
+    PBKDF2_ALGORITHM,
+  );
 
   let expectedBytes: Buffer;
   try {
@@ -27,7 +38,7 @@ export function validateAuthToken(
     return false;
   }
 
-  if (expectedBytes.length !== 20) {
+  if (expectedBytes.length !== PBKDF2_KEY_LENGTH) {
     return false;
   }
 
@@ -69,14 +80,20 @@ export function createAuthMiddleware(
 }
 
 export function generateApiKey(): { bearerToken: string; apiKeyHash: string } {
-  const token = crypto.randomBytes(16);
-  const salt = crypto.randomBytes(16);
+  const token = crypto.randomBytes(TOKEN_BYTE_LENGTH);
+  const salt = crypto.randomBytes(TOKEN_BYTE_LENGTH);
 
   const tokenHex = token.toString("hex");
   const saltHex = salt.toString("hex");
 
   // Pass hex strings as ASCII bytes (matching moosestack behavior)
-  const derivedKey = crypto.pbkdf2Sync(tokenHex, saltHex, 1000, 20, "sha256");
+  const derivedKey = crypto.pbkdf2Sync(
+    tokenHex,
+    saltHex,
+    PBKDF2_ITERATIONS,
+    PBKDF2_KEY_LENGTH,
+    PBKDF2_ALGORITHM,
+  );
 
   return {
     bearerToken: `${tokenHex}.${saltHex}`,
