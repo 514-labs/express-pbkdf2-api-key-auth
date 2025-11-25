@@ -16,7 +16,8 @@
 
 # express-pbkdf2-api-key-auth
 
-Express middleware for PBKDF2 API key authentication. Zero external dependencies (uses Node.js crypto). Compatible with [moosestack](https://github.com/514-labs/moosestack) token format.
+[Express](https://expressjs.com/) middleware for [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) (Password-Based Key Derivation Function 2) API key authentication. Zero external dependencies (uses [Node.js](https://nodejs.org) [crypto](https://nodejs.org/api/crypto.html)). 
+Compatible with [MooseStack](https://github.com/514-labs/moosestack) token format.
 
 ## Installation
 
@@ -78,7 +79,7 @@ Authorization: Bearer {token_hex}.{salt_hex}
 
 ## Token Format
 
-The token format is compatible with [moosestack](https://github.com/514-labs/moosestack)'s `moose generate hash-token` command:
+The token format is compatible with [MooseStack](https://github.com/514-labs/moosestack)'s `moose generate hash-token` command, and can be used in any Express project:
 
 - Token: 16 random bytes (32-char hex string)
 - Salt: 16 random bytes (32-char hex string)
@@ -107,3 +108,7 @@ Creates an Express middleware for authentication.
 Generates a new API key pair.
 
 **Returns:** `{ bearerToken: string, apiKeyHash: string }`
+
+## Made by
+
+The team at [Fiveonefour labs](https://www.fiveonefour.com/), the maintainers of [MooseStack](https://github.com/514-labs/moosestack).
