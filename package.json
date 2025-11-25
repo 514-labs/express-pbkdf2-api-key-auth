@@ -1,0 +1,45 @@
+{
+  "name": "@514-labs/express-pbkdf2-api-key-auth",
+  "version": "1.0.0",
+  "description": "Express middleware for PBKDF2 API key authentication",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "bin": {
+    "generate-api-key": "./dist/bin/generate-api-key.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "typecheck": "tsc --noEmit",
+    "lint": "biome check",
+    "lint:fix": "biome check --write",
+    "build": "tsup",
+    "test": "tsup && mocha 'tests/**/*.test.ts'",
+    "prepublishOnly": "npm run lint && npm run test"
+  },
+  "peerDependencies": {
+    "express": "^4.0.0 || ^5.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.7",
+    "@types/chai": "^5.2.3",
+    "@types/express": "^5.0.5",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^24.10.1",
+    "chai": "^6.2.1",
+    "express": "^4.18.2",
+    "mocha": "^11.7.5",
+    "tsup": "^8.5.1",
+    "tsx": "^4.20.6",
+    "typescript": "^5.9.3"
+  }
+}
