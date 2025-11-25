@@ -20,7 +20,8 @@
     "lint": "biome check",
     "lint:fix": "biome check --write",
     "build": "tsup",
-    "test": "tsup && mocha 'tests/**/*.test.ts'"
+    "test": "tsup && mocha 'tests/**/*.test.ts'",
+    "prepublishOnly": "npm run lint && npm run test"
   },
   "peerDependencies": {
     "express": "^4.0.0 || ^5.0.0"
