@@ -12,6 +12,9 @@
       "require": "./dist/index.js"
     }
   },
+  "bin": {
+    "generate-api-key": "./dist/bin/generate-api-key.js"
+  },
   "files": [
     "dist"
   ],

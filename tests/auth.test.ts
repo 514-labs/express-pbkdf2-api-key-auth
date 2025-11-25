@@ -1,20 +1,19 @@
 import crypto from "node:crypto";
 import { expect } from "chai";
 import type { NextFunction, Request, Response } from "express";
-import { createAuthMiddleware, validateAuthToken } from "../src/index";
+import {
+  createAuthMiddleware,
+  generateApiKey,
+  validateAuthToken,
+} from "../src/index";
 
+// Generate token matching moosestack format: hex strings as ASCII bytes, 20-byte output
 function generateTestToken() {
-  const tokenBytes = crypto.randomBytes(16);
-  const saltBytes = crypto.randomBytes(16);
-  const derivedKey = crypto.pbkdf2Sync(
-    tokenBytes,
-    saltBytes,
-    1000,
-    32,
-    "sha256",
-  );
+  const tokenHex = crypto.randomBytes(16).toString("hex");
+  const saltHex = crypto.randomBytes(16).toString("hex");
+  const derivedKey = crypto.pbkdf2Sync(tokenHex, saltHex, 1000, 20, "sha256");
   return {
-    token: `${tokenBytes.toString("hex")}.${saltBytes.toString("hex")}`,
+    token: `${tokenHex}.${saltHex}`,
     expectedHash: derivedKey.toString("hex"),
   };
 }
@@ -28,37 +27,48 @@ describe("validateAuthToken", () => {
 
 describe("validateAuthToken edge cases", () => {
   it("returns false for token without separator", () => {
-    expect(validateAuthToken("abcd1234", "aabbccdd")).to.equal(false);
+    expect(validateAuthToken("abcd1234", "a".repeat(40))).to.equal(false);
   });
 
   it("returns false for token with multiple separators", () => {
-    expect(validateAuthToken("aa.bb.cc", "aabbccdd")).to.equal(false);
-  });
-
-  it("returns false for invalid hex in token", () => {
-    expect(validateAuthToken("zzzz.1234", "aabbccdd")).to.equal(false);
-  });
-
-  it("returns false for invalid hex in salt", () => {
-    expect(validateAuthToken("1234.zzzz", "aabbccdd")).to.equal(false);
-  });
-
-  it("returns false for invalid hex in expected hash", () => {
-    expect(validateAuthToken("1234.5678", "zzzzzzzz")).to.equal(false);
+    expect(validateAuthToken("aa.bb.cc", "a".repeat(40))).to.equal(false);
   });
 
   it("returns false for wrong hash", () => {
     const { token } = generateTestToken();
-    const wrongHash = "a".repeat(64);
+    const wrongHash = "a".repeat(40);
     expect(validateAuthToken(token, wrongHash)).to.equal(false);
   });
 
   it("returns false for empty token part", () => {
-    expect(validateAuthToken(".1234", "a".repeat(64))).to.equal(false);
+    expect(validateAuthToken(".1234", "a".repeat(40))).to.equal(false);
   });
 
   it("returns false for empty salt part", () => {
-    expect(validateAuthToken("1234.", "a".repeat(64))).to.equal(false);
+    expect(validateAuthToken("1234.", "a".repeat(40))).to.equal(false);
+  });
+
+  it("returns false for wrong length hash", () => {
+    const { token } = generateTestToken();
+    expect(validateAuthToken(token, "a".repeat(64))).to.equal(false);
+  });
+});
+
+describe("generateApiKey", () => {
+  it("generates a valid bearer token and hash", () => {
+    const { bearerToken, apiKeyHash } = generateApiKey();
+
+    expect(bearerToken).to.match(/^[a-f0-9]{32}\.[a-f0-9]{32}$/);
+    expect(apiKeyHash).to.match(/^[a-f0-9]{40}$/);
+    expect(validateAuthToken(bearerToken, apiKeyHash)).to.equal(true);
+  });
+
+  it("generates unique tokens each time", () => {
+    const key1 = generateApiKey();
+    const key2 = generateApiKey();
+
+    expect(key1.bearerToken).to.not.equal(key2.bearerToken);
+    expect(key1.apiKeyHash).to.not.equal(key2.apiKeyHash);
   });
 });
 
@@ -83,7 +93,7 @@ describe("createAuthMiddleware", () => {
 
 describe("createAuthMiddleware error handling", () => {
   it("returns 401 when Authorization header is missing", () => {
-    const middleware = createAuthMiddleware(() => "somehash");
+    const middleware = createAuthMiddleware(() => "a".repeat(40));
 
     const req = { headers: {} } as Request;
     let statusCode: number | undefined;
@@ -112,7 +122,7 @@ describe("createAuthMiddleware error handling", () => {
   });
 
   it("returns 401 when Authorization header has wrong scheme", () => {
-    const middleware = createAuthMiddleware(() => "somehash");
+    const middleware = createAuthMiddleware(() => "a".repeat(40));
 
     const req = { headers: { authorization: "Basic abc123" } } as Request;
     let statusCode: number | undefined;
@@ -165,7 +175,9 @@ describe("createAuthMiddleware error handling", () => {
     const { expectedHash } = generateTestToken();
     const middleware = createAuthMiddleware(() => expectedHash);
 
-    const req = { headers: { authorization: "Bearer wrong.token" } } as Request;
+    const req = {
+      headers: { authorization: "Bearer wrong.token" },
+    } as Request;
     let statusCode: number | undefined;
     let responseBody: { error: string } | undefined;
     const res = {

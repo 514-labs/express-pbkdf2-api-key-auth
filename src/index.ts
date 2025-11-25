@@ -10,30 +10,26 @@ export function validateAuthToken(
     return false;
   }
 
-  let tokenBytes: Buffer, saltBytes: Buffer, expectedBytes: Buffer;
+  const tokenHex = parts[0];
+  const saltHex = parts[1];
+
+  if (tokenHex.length === 0 || saltHex.length === 0) {
+    return false;
+  }
+
+  // Pass hex strings as ASCII bytes (matching moosestack behavior)
+  const derivedKey = crypto.pbkdf2Sync(tokenHex, saltHex, 1000, 20, "sha256");
+
+  let expectedBytes: Buffer;
   try {
-    tokenBytes = Buffer.from(parts[0], "hex");
-    saltBytes = Buffer.from(parts[1], "hex");
     expectedBytes = Buffer.from(expectedHash, "hex");
   } catch {
     return false;
   }
 
-  if (
-    tokenBytes.length === 0 ||
-    saltBytes.length === 0 ||
-    expectedBytes.length === 0
-  ) {
+  if (expectedBytes.length !== 20) {
     return false;
   }
-
-  const derivedKey = crypto.pbkdf2Sync(
-    tokenBytes,
-    saltBytes,
-    1000,
-    32,
-    "sha256",
-  );
 
   return crypto.timingSafeEqual(derivedKey, expectedBytes);
 }
@@ -69,5 +65,21 @@ export function createAuthMiddleware(
     }
 
     next();
+  };
+}
+
+export function generateApiKey(): { bearerToken: string; apiKeyHash: string } {
+  const token = crypto.randomBytes(16);
+  const salt = crypto.randomBytes(16);
+
+  const tokenHex = token.toString("hex");
+  const saltHex = salt.toString("hex");
+
+  // Pass hex strings as ASCII bytes (matching moosestack behavior)
+  const derivedKey = crypto.pbkdf2Sync(tokenHex, saltHex, 1000, 20, "sha256");
+
+  return {
+    bearerToken: `${tokenHex}.${saltHex}`,
+    apiKeyHash: derivedKey.toString("hex"),
   };
 }
