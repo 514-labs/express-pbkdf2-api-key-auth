@@ -1,14 +1,13 @@
-const { describe, it } = require('node:test');
-const assert = require('node:assert');
-const crypto = require('node:crypto');
+import { describe, it } from 'node:test';
+import assert from 'node:assert';
+import crypto from 'node:crypto';
+import { validateAuthToken, createAuthMiddleware } from './index';
+import type { Request, Response, NextFunction } from 'express';
 
-// Helper to generate a valid token and its expected hash
 function generateTestToken() {
   const tokenBytes = crypto.randomBytes(16);
   const saltBytes = crypto.randomBytes(16);
-  
   const derivedKey = crypto.pbkdf2Sync(tokenBytes, saltBytes, 1000, 32, 'sha256');
-  
   return {
     token: `${tokenBytes.toString('hex')}.${saltBytes.toString('hex')}`,
     expectedHash: derivedKey.toString('hex')
@@ -17,16 +16,12 @@ function generateTestToken() {
 
 describe('validateAuthToken', () => {
   it('returns true for valid token matching expected hash', () => {
-    const { validateAuthToken } = require('./auth');
     const { token, expectedHash } = generateTestToken();
-    
     assert.strictEqual(validateAuthToken(token, expectedHash), true);
   });
 });
 
 describe('validateAuthToken edge cases', () => {
-  const { validateAuthToken } = require('./auth');
-
   it('returns false for token without separator', () => {
     assert.strictEqual(validateAuthToken('abcd1234', 'aabbccdd'), false);
   });
@@ -63,100 +58,99 @@ describe('validateAuthToken edge cases', () => {
 });
 
 describe('createAuthMiddleware', () => {
-  it('calls next() for valid Authorization header', async () => {
-    const { createAuthMiddleware } = require('./auth');
+  it('calls next() for valid Authorization header', () => {
     const { token, expectedHash } = generateTestToken();
-    
     const getExpectedHash = () => expectedHash;
     const middleware = createAuthMiddleware(getExpectedHash);
-    
-    const req = { headers: { authorization: `Bearer ${token}` } };
-    const res = {};
+
+    const req = { headers: { authorization: `Bearer ${token}` } } as Request;
+    const res = {} as Response;
     let nextCalled = false;
-    const next = () => { nextCalled = true; };
-    
+    const next = (() => { nextCalled = true; }) as NextFunction;
+
     middleware(req, res, next);
-    
+
     assert.strictEqual(nextCalled, true);
   });
 });
 
 describe('createAuthMiddleware error handling', () => {
-  const { createAuthMiddleware } = require('./auth');
-
   it('returns 401 when Authorization header is missing', () => {
     const middleware = createAuthMiddleware(() => 'somehash');
-    
-    const req = { headers: {} };
-    let statusCode, responseBody;
+
+    const req = { headers: {} } as Request;
+    let statusCode: number | undefined;
+    let responseBody: { error: string } | undefined;
     const res = {
-      status(code) { statusCode = code; return this; },
-      json(body) { responseBody = body; }
-    };
+      status(code: number) { statusCode = code; return this; },
+      json(body: { error: string }) { responseBody = body; }
+    } as unknown as Response;
     let nextCalled = false;
-    const next = () => { nextCalled = true; };
-    
+    const next = (() => { nextCalled = true; }) as NextFunction;
+
     middleware(req, res, next);
-    
+
     assert.strictEqual(statusCode, 401);
-    assert.strictEqual(responseBody.error, 'Missing or invalid Authorization header');
+    assert.strictEqual(responseBody?.error, 'Missing or invalid Authorization header');
     assert.strictEqual(nextCalled, false);
   });
 
   it('returns 401 when Authorization header has wrong scheme', () => {
     const middleware = createAuthMiddleware(() => 'somehash');
-    
-    const req = { headers: { authorization: 'Basic abc123' } };
-    let statusCode, responseBody;
+
+    const req = { headers: { authorization: 'Basic abc123' } } as Request;
+    let statusCode: number | undefined;
     const res = {
-      status(code) { statusCode = code; return this; },
-      json(body) { responseBody = body; }
-    };
+      status(code: number) { statusCode = code; return this; },
+      json() {}
+    } as unknown as Response;
     let nextCalled = false;
-    const next = () => { nextCalled = true; };
-    
+    const next = (() => { nextCalled = true; }) as NextFunction;
+
     middleware(req, res, next);
-    
+
     assert.strictEqual(statusCode, 401);
     assert.strictEqual(nextCalled, false);
   });
 
   it('returns 401 when getExpectedHash returns null', () => {
     const middleware = createAuthMiddleware(() => null);
-    
-    const req = { headers: { authorization: 'Bearer abc.def' } };
-    let statusCode, responseBody;
+
+    const req = { headers: { authorization: 'Bearer abc.def' } } as Request;
+    let statusCode: number | undefined;
+    let responseBody: { error: string } | undefined;
     const res = {
-      status(code) { statusCode = code; return this; },
-      json(body) { responseBody = body; }
-    };
+      status(code: number) { statusCode = code; return this; },
+      json(body: { error: string }) { responseBody = body; }
+    } as unknown as Response;
     let nextCalled = false;
-    const next = () => { nextCalled = true; };
-    
+    const next = (() => { nextCalled = true; }) as NextFunction;
+
     middleware(req, res, next);
-    
+
     assert.strictEqual(statusCode, 401);
-    assert.strictEqual(responseBody.error, 'No API key configured');
+    assert.strictEqual(responseBody?.error, 'No API key configured');
     assert.strictEqual(nextCalled, false);
   });
 
   it('returns 401 when token is invalid', () => {
-    const { token, expectedHash } = generateTestToken();
+    const { expectedHash } = generateTestToken();
     const middleware = createAuthMiddleware(() => expectedHash);
-    
-    const req = { headers: { authorization: 'Bearer wrong.token' } };
-    let statusCode, responseBody;
+
+    const req = { headers: { authorization: 'Bearer wrong.token' } } as Request;
+    let statusCode: number | undefined;
+    let responseBody: { error: string } | undefined;
     const res = {
-      status(code) { statusCode = code; return this; },
-      json(body) { responseBody = body; }
-    };
+      status(code: number) { statusCode = code; return this; },
+      json(body: { error: string }) { responseBody = body; }
+    } as unknown as Response;
     let nextCalled = false;
-    const next = () => { nextCalled = true; };
-    
+    const next = (() => { nextCalled = true; }) as NextFunction;
+
     middleware(req, res, next);
-    
+
     assert.strictEqual(statusCode, 401);
-    assert.strictEqual(responseBody.error, 'Invalid API key');
+    assert.strictEqual(responseBody?.error, 'Invalid API key');
     assert.strictEqual(nextCalled, false);
   });
 });

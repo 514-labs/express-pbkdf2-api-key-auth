@@ -1,12 +1,13 @@
-const crypto = require('node:crypto');
+import crypto from 'node:crypto';
+import type { Request, Response, NextFunction } from 'express';
 
-function validateAuthToken(token, expectedHash) {
+export function validateAuthToken(token: string, expectedHash: string): boolean {
   const parts = token.split('.');
   if (parts.length !== 2) {
     return false;
   }
 
-  let tokenBytes, saltBytes, expectedBytes;
+  let tokenBytes: Buffer, saltBytes: Buffer, expectedBytes: Buffer;
   try {
     tokenBytes = Buffer.from(parts[0], 'hex');
     saltBytes = Buffer.from(parts[1], 'hex');
@@ -24,30 +25,28 @@ function validateAuthToken(token, expectedHash) {
   return crypto.timingSafeEqual(derivedKey, expectedBytes);
 }
 
-function createAuthMiddleware(getExpectedHash) {
-  return function authMiddleware(req, res, next) {
+export function createAuthMiddleware(getExpectedHash: (req: Request) => string | null) {
+  return function authMiddleware(req: Request, res: Response, next: NextFunction): void {
     const authHeader = req.headers.authorization;
-    
+
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
       res.status(401).json({ error: 'Missing or invalid Authorization header' });
       return;
     }
-    
+
     const token = authHeader.slice(7);
     const expectedHash = getExpectedHash(req);
-    
+
     if (!expectedHash) {
       res.status(401).json({ error: 'No API key configured' });
       return;
     }
-    
+
     if (!validateAuthToken(token, expectedHash)) {
       res.status(401).json({ error: 'Invalid API key' });
       return;
     }
-    
+
     next();
   };
 }
-
-module.exports = { validateAuthToken, createAuthMiddleware };
