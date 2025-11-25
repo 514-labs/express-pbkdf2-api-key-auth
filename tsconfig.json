@@ -1,10 +1,11 @@
 {
-  "extends": "@tsconfig/recommended/tsconfig.json",
   "compilerOptions": {
-    "outDir": "dist/cjs",
-    "declaration": true,
-    "module": "CommonJS",
-    "moduleResolution": "Node"
-  },
-  "include": ["src/index.ts"]
+    "target": "es2022",
+    "module": "commonjs",
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "strictNullChecks": true,
+    "skipLibCheck": true
+  }
 }
