@@ -6,8 +6,8 @@
   </a>
   <h1>MooseStack</h1>
 
-<a href="https://github.com/514-labs/express-pbkdf2-api-key-auth/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/514-labs/express-pbkdf2-api-key-auth/actions/workflows/ci.yml/badge.svg?branch=main"></a>
 <a href="https://www.fiveonefour.com"><img alt="MooseStack logo" src="https://img.shields.io/badge/MADE%20BY-Fiveonefour-black.svg"></a>
+<a href="https://github.com/514-labs/express-pbkdf2-api-key-auth/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/514-labs/express-pbkdf2-api-key-auth/actions/workflows/ci.yml/badge.svg?branch=main"></a>
 <a href="https://www.npmjs.com/package/@514labs/express-pbkdf2-api-key-auth?activeTab=readme"><img alt="NPM version" src="https://img.shields.io/npm/v/%40514labs%2Fpbkdf2-api-key-auth?logo=npm"></a>
 <a href="https://join.slack.com/t/moose-community/shared_invite/zt-2fjh5n3wz-cnOmM9Xe9DYAgQrNu8xKxg"><img alt="MooseStack Community" src="https://img.shields.io/badge/Slack-MooseStack_community-purple.svg?logo=slack"></a>
 <a href="LICENSE"><img alt="MIT License" src="https://img.shields.io/badge/License-MIT-yellow.svg"></a>
