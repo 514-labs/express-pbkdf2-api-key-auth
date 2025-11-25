@@ -5,7 +5,7 @@ Express middleware for PBKDF2 API key authentication. Zero external dependencies
 ## Installation
 
 ```bash
-npm install express-pbkdf2-api-key-auth
+npm install @514-labs/express-pbkdf2-api-key-auth
 ```
 
 ## Usage
@@ -18,11 +18,10 @@ const app = express();
 
 const authMiddleware = createAuthMiddleware((req) => {
   // Return the expected hash for this request
-  // Could look up per-user hash from database
   return process.env.API_KEY_HASH;
 });
 
-app.use("/api", authMiddleware);
+app.use(authMiddleware);
 
 app.get("/api/protected", (req, res) => {
   res.json({ message: "Authenticated!" });
@@ -40,6 +39,7 @@ Authorization: Bearer {token_hex}.{salt_hex}
 ```
 
 The middleware validates the token using PBKDF2-HMAC-SHA256 with:
+
 - 1000 iterations
 - 32-byte output
 - Constant-time comparison (timing-attack safe)
@@ -51,24 +51,12 @@ The middleware validates the token using PBKDF2-HMAC-SHA256 with:
 Creates an Express middleware for authentication.
 
 **Parameters:**
+
 - `getExpectedHash(req)` - Function that returns the expected hash for the request, or `null` if no key is configured
 
 **Returns:** Express middleware function
 
 **Responses:**
+
 - `401` - Missing/invalid Authorization header, no API key configured, or invalid token
 - Calls `next()` on successful authentication
-
-### `validateAuthToken(token, expectedHash)`
-
-Low-level function to validate a token against an expected hash.
-
-**Parameters:**
-- `token` - Token string in format `{token_hex}.{salt_hex}`
-- `expectedHash` - Expected PBKDF2-derived hash in hex format
-
-**Returns:** `boolean`
-
-## License
-
-ISC
