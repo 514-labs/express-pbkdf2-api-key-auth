@@ -5,7 +5,7 @@ Express middleware for PBKDF2 API key authentication. Zero external dependencies
 ## Installation
 
 ```bash
-npm install @514labs/express-pbkdf2-api-key-auth
+npm install @514-labs/express-pbkdf2-api-key-auth
 ```
 
 ## Generating API Keys
@@ -17,38 +17,35 @@ npx generate-api-key
 ```
 
 Output:
+
 ```
 API Key Hash (store server-side):
-1ee1d40d1e14b3bacd42fc610f18edcce993f64b
+1ee1xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxf64b
 
-Bearer Token (give to client):
-3cb36f1346330dbd9b662487f0b70dad.1f6727c8bb1b2463a9c94a1ff8ea6f33
+Bearer Token (client sends in header; Authorization: Bearer ...):
+3cb3xxxxxxxxxxxxxxxxxxxxxxxx0dad.1f67xxxxxxxxxxxxxxxxxxxxxxxx6f33
 ```
 
 Or programmatically:
 
 ```javascript
-import { generateApiKey } from "@514labs/express-pbkdf2-api-key-auth";
+import { generateApiKey } from "@514-labs/express-pbkdf2-api-key-auth";
 
 const { bearerToken, apiKeyHash } = generateApiKey();
-// Store apiKeyHash server-side, give bearerToken to client
 ```
 
 ## Usage
 
 ```javascript
 import express from "express";
-import { createAuthMiddleware } from "@514labs/express-pbkdf2-api-key-auth";
-
-const app = express();
+import { createAuthMiddleware } from "@514-labs/express-pbkdf2-api-key-auth";
 
 const authMiddleware = createAuthMiddleware((req) => {
-  // Return the expected hash for this request
-  // Could look up per-user hash from database
   return process.env.API_KEY_HASH;
 });
 
-app.use("/api", authMiddleware);
+const app = express();
+app.use(authMiddleware);
 
 app.get("/api/protected", (req, res) => {
   res.json({ message: "Authenticated!" });
@@ -65,7 +62,7 @@ Authorization: Bearer {token_hex}.{salt_hex}
 
 ## Token Format
 
-The token format is compatible with moosestack's `moose generate hash-token` command:
+The token format is compatible with [moosestack](https://github.com/514-labs/moosestack)'s `moose generate hash-token` command:
 
 - Token: 16 random bytes (32-char hex string)
 - Salt: 16 random bytes (32-char hex string)
@@ -74,35 +71,23 @@ The token format is compatible with moosestack's `moose generate hash-token` com
 
 ## API
 
-### `generateApiKey()`
-
-Generates a new API key pair.
-
-**Returns:** `{ bearerToken: string, apiKeyHash: string }`
-
 ### `createAuthMiddleware(getExpectedHash)`
 
 Creates an Express middleware for authentication.
 
 **Parameters:**
+
 - `getExpectedHash(req)` - Function that returns the expected hash for the request, or `null` if no key is configured
 
 **Returns:** Express middleware function
 
 **Responses:**
+
 - `401` - Missing/invalid Authorization header, no API key configured, or invalid token
 - Calls `next()` on successful authentication
 
-### `validateAuthToken(token, expectedHash)`
+### `generateApiKey()`
 
-Low-level function to validate a token against an expected hash.
+Generates a new API key pair.
 
-**Parameters:**
-- `token` - Token string in format `{token_hex}.{salt_hex}`
-- `expectedHash` - Expected PBKDF2-derived hash (40-char hex string)
-
-**Returns:** `boolean`
-
-## License
-
-ISC
+**Returns:** `{ bearerToken: string, apiKeyHash: string }`
