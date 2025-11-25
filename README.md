@@ -16,13 +16,13 @@
 
 # express-pbkdf2-api-key-auth
 
-[Express](https://expressjs.com/) middleware for [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) (Password-Based Key Derivation Function 2) API key authentication. Zero external dependencies (uses [Node.js](https://nodejs.org) [crypto](https://nodejs.org/api/crypto.html)). 
+[Express](https://expressjs.com/) middleware for [PBKDF2](https://en.wikipedia.org/wiki/PBKDF2) (Password-Based Key Derivation Function 2) API key authentication. Zero external dependencies (uses [Node.js](https://nodejs.org) [crypto](https://nodejs.org/api/crypto.html)).
 Compatible with [MooseStack](https://github.com/514-labs/moosestack) token format.
 
 ## Installation
 
 ```bash
-npm install @514-labs/express-pbkdf2-api-key-auth
+npm install @514labs/express-pbkdf2-api-key-auth
 ```
 
 ## Generating API Keys
@@ -46,7 +46,7 @@ Bearer Token (client sends in header; Authorization: Bearer ...):
 Or programmatically:
 
 ```javascript
-import { generateApiKey } from "@514-labs/express-pbkdf2-api-key-auth";
+import { generateApiKey } from "@514labs/express-pbkdf2-api-key-auth";
 
 const { bearerToken, apiKeyHash } = generateApiKey();
 ```
@@ -55,7 +55,7 @@ const { bearerToken, apiKeyHash } = generateApiKey();
 
 ```javascript
 import express from "express";
-import { createAuthMiddleware } from "@514-labs/express-pbkdf2-api-key-auth";
+import { createAuthMiddleware } from "@514labs/express-pbkdf2-api-key-auth";
 
 const authMiddleware = createAuthMiddleware((req) => {
   return process.env.API_KEY_HASH;
