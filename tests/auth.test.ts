@@ -1,12 +1,18 @@
-import { expect } from "chai";
 import crypto from "node:crypto";
-import { validateAuthToken, createAuthMiddleware } from "../src/index";
-import type { Request, Response, NextFunction } from "express";
+import { expect } from "chai";
+import type { NextFunction, Request, Response } from "express";
+import { createAuthMiddleware, validateAuthToken } from "../src/index";
 
 function generateTestToken() {
   const tokenBytes = crypto.randomBytes(16);
   const saltBytes = crypto.randomBytes(16);
-  const derivedKey = crypto.pbkdf2Sync(tokenBytes, saltBytes, 1000, 32, "sha256");
+  const derivedKey = crypto.pbkdf2Sync(
+    tokenBytes,
+    saltBytes,
+    1000,
+    32,
+    "sha256",
+  );
   return {
     token: `${tokenBytes.toString("hex")}.${saltBytes.toString("hex")}`,
     expectedHash: derivedKey.toString("hex"),
@@ -65,7 +71,9 @@ describe("createAuthMiddleware", () => {
     const req = { headers: { authorization: `Bearer ${token}` } } as Request;
     const res = {} as Response;
     let nextCalled = false;
-    const next = (() => { nextCalled = true; }) as NextFunction;
+    const next = (() => {
+      nextCalled = true;
+    }) as NextFunction;
 
     middleware(req, res, next);
 
@@ -81,16 +89,25 @@ describe("createAuthMiddleware error handling", () => {
     let statusCode: number | undefined;
     let responseBody: { error: string } | undefined;
     const res = {
-      status(code: number) { statusCode = code; return this; },
-      json(body: { error: string }) { responseBody = body; },
+      status(code: number) {
+        statusCode = code;
+        return this;
+      },
+      json(body: { error: string }) {
+        responseBody = body;
+      },
     } as unknown as Response;
     let nextCalled = false;
-    const next = (() => { nextCalled = true; }) as NextFunction;
+    const next = (() => {
+      nextCalled = true;
+    }) as NextFunction;
 
     middleware(req, res, next);
 
     expect(statusCode).to.equal(401);
-    expect(responseBody?.error).to.equal("Missing or invalid Authorization header");
+    expect(responseBody?.error).to.equal(
+      "Missing or invalid Authorization header",
+    );
     expect(nextCalled).to.equal(false);
   });
 
@@ -100,11 +117,16 @@ describe("createAuthMiddleware error handling", () => {
     const req = { headers: { authorization: "Basic abc123" } } as Request;
     let statusCode: number | undefined;
     const res = {
-      status(code: number) { statusCode = code; return this; },
+      status(code: number) {
+        statusCode = code;
+        return this;
+      },
       json() {},
     } as unknown as Response;
     let nextCalled = false;
-    const next = (() => { nextCalled = true; }) as NextFunction;
+    const next = (() => {
+      nextCalled = true;
+    }) as NextFunction;
 
     middleware(req, res, next);
 
@@ -119,11 +141,18 @@ describe("createAuthMiddleware error handling", () => {
     let statusCode: number | undefined;
     let responseBody: { error: string } | undefined;
     const res = {
-      status(code: number) { statusCode = code; return this; },
-      json(body: { error: string }) { responseBody = body; },
+      status(code: number) {
+        statusCode = code;
+        return this;
+      },
+      json(body: { error: string }) {
+        responseBody = body;
+      },
     } as unknown as Response;
     let nextCalled = false;
-    const next = (() => { nextCalled = true; }) as NextFunction;
+    const next = (() => {
+      nextCalled = true;
+    }) as NextFunction;
 
     middleware(req, res, next);
 
@@ -140,11 +169,18 @@ describe("createAuthMiddleware error handling", () => {
     let statusCode: number | undefined;
     let responseBody: { error: string } | undefined;
     const res = {
-      status(code: number) { statusCode = code; return this; },
-      json(body: { error: string }) { responseBody = body; },
+      status(code: number) {
+        statusCode = code;
+        return this;
+      },
+      json(body: { error: string }) {
+        responseBody = body;
+      },
     } as unknown as Response;
     let nextCalled = false;
-    const next = (() => { nextCalled = true; }) as NextFunction;
+    const next = (() => {
+      nextCalled = true;
+    }) as NextFunction;
 
     middleware(req, res, next);
 
