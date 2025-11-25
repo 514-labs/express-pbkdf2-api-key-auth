@@ -80,3 +80,83 @@ describe('createAuthMiddleware', () => {
     assert.strictEqual(nextCalled, true);
   });
 });
+
+describe('createAuthMiddleware error handling', () => {
+  const { createAuthMiddleware } = require('./auth');
+
+  it('returns 401 when Authorization header is missing', () => {
+    const middleware = createAuthMiddleware(() => 'somehash');
+    
+    const req = { headers: {} };
+    let statusCode, responseBody;
+    const res = {
+      status(code) { statusCode = code; return this; },
+      json(body) { responseBody = body; }
+    };
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
+    
+    middleware(req, res, next);
+    
+    assert.strictEqual(statusCode, 401);
+    assert.strictEqual(responseBody.error, 'Missing or invalid Authorization header');
+    assert.strictEqual(nextCalled, false);
+  });
+
+  it('returns 401 when Authorization header has wrong scheme', () => {
+    const middleware = createAuthMiddleware(() => 'somehash');
+    
+    const req = { headers: { authorization: 'Basic abc123' } };
+    let statusCode, responseBody;
+    const res = {
+      status(code) { statusCode = code; return this; },
+      json(body) { responseBody = body; }
+    };
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
+    
+    middleware(req, res, next);
+    
+    assert.strictEqual(statusCode, 401);
+    assert.strictEqual(nextCalled, false);
+  });
+
+  it('returns 401 when getExpectedHash returns null', () => {
+    const middleware = createAuthMiddleware(() => null);
+    
+    const req = { headers: { authorization: 'Bearer abc.def' } };
+    let statusCode, responseBody;
+    const res = {
+      status(code) { statusCode = code; return this; },
+      json(body) { responseBody = body; }
+    };
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
+    
+    middleware(req, res, next);
+    
+    assert.strictEqual(statusCode, 401);
+    assert.strictEqual(responseBody.error, 'No API key configured');
+    assert.strictEqual(nextCalled, false);
+  });
+
+  it('returns 401 when token is invalid', () => {
+    const { token, expectedHash } = generateTestToken();
+    const middleware = createAuthMiddleware(() => expectedHash);
+    
+    const req = { headers: { authorization: 'Bearer wrong.token' } };
+    let statusCode, responseBody;
+    const res = {
+      status(code) { statusCode = code; return this; },
+      json(body) { responseBody = body; }
+    };
+    let nextCalled = false;
+    const next = () => { nextCalled = true; };
+    
+    middleware(req, res, next);
+    
+    assert.strictEqual(statusCode, 401);
+    assert.strictEqual(responseBody.error, 'Invalid API key');
+    assert.strictEqual(nextCalled, false);
+  });
+});
