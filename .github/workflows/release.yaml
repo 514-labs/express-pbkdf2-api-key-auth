@@ -54,6 +54,7 @@ jobs:
           tag: v${{ steps.version.outputs.VERSION }}
           generateReleaseNotes: true
           commit: ${{ github.sha }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
   publish-npm:
     name: Publish to NPM
