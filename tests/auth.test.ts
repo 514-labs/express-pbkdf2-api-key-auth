@@ -70,6 +70,24 @@ describe("generateApiKey", () => {
     expect(key1.bearerToken).to.not.equal(key2.bearerToken);
     expect(key1.apiKeyHash).to.not.equal(key2.apiKeyHash);
   });
+
+  it("generated key works end-to-end with middleware", () => {
+    const { bearerToken, apiKeyHash } = generateApiKey();
+    const middleware = createAuthMiddleware(() => apiKeyHash);
+
+    const req = {
+      headers: { authorization: `Bearer ${bearerToken}` },
+    } as Request;
+    const res = {} as Response;
+    let nextCalled = false;
+    const next = (() => {
+      nextCalled = true;
+    }) as NextFunction;
+
+    middleware(req, res, next);
+
+    expect(nextCalled).to.equal(true);
+  });
 });
 
 describe("createAuthMiddleware", () => {
