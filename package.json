@@ -1,6 +1,6 @@
 {
   "name": "@514labs/express-pbkdf2-api-key-auth",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "Express middleware for PBKDF2 API key authentication",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
